@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">SensorTest</string>
+
+    <string name="accelerometer">Accelerometer</string>
+    <string name="gyroscope">Gyroscope</string>
+    <string name="linear_acceleration">Linear acceleration</string>
+    <string name="magnetometer">magnetometer</string>
+    <string name="proximity">Proximity</string>
+    <string name="pressure">Pressure</string>
+    <string name="light">Light</string>
+
+
+    <string name="accelerometer_x">x: %1$.4f</string>
+    <string name="accelerometer_y">y: %1$.4f</string>
+    <string name="accelerometer_z">z: %1$.4f</string>
+
+    <string name="gyroscope_x">x: %1$.4f</string>
+    <string name="gyroscope_y">y: %1$.4f</string>
+    <string name="gyroscope_z">z: %1$.4f</string>
+
+    <string name="linear_acceleration_x">x: %1$.4f</string>
+    <string name="linear_acceleration_y">y: %1$.4f</string>
+    <string name="linear_acceleration_z">z: %1$.4f</string>
+
+    <string name="magnetometer_x">x: %1$.4f</string>
+    <string name="magnetometer_y">y: %1$.4f</string>
+    <string name="magnetometer_z">z: %1$.4f</string>
+
+    <string name="proximity_value">value: %1$.4f</string>
+    <string name="light_value">value: %1$.4f lx</string>
+    <string name="pressure_value">value: %1$.4f hPa</string>
+
+</resources>
