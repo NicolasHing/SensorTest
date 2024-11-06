@@ -1,21 +1,34 @@
 package com.example.sensortest
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.Bundle
-import android.util.Log
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.OnSuccessListener
+import android.Manifest
+import android.content.pm.PackageManager
 
-class MainActivity : AppCompatActivity(), SensorEventListener {
+
+class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
-
     private var accelerometer: Sensor? = null
     private var gyroscope: Sensor? = null
     private var linearAcceleration: Sensor? = null
@@ -24,117 +37,62 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var pressure: Sensor? = null
     private var light: Sensor? = null
 
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentLocation: Location? = null
 
-    private lateinit var accelerometerX: TextView
-    private lateinit var accelerometerY: TextView
-    private lateinit var accelerometerZ: TextView
-    private lateinit var gyroscopeX: TextView
-    private lateinit var gyroscopeY: TextView
-    private lateinit var gyroscopeZ: TextView
-    private lateinit var linearAccelerationX: TextView
-    private lateinit var linearAccelerationY: TextView
-    private lateinit var linearAccelerationZ: TextView
-    private lateinit var magnetometerX: TextView
-    private lateinit var magnetometerY: TextView
-    private lateinit var magnetometerZ: TextView
-    private lateinit var proximityView: TextView
-    private lateinit var pressureView: TextView
-    private lateinit var lightView: TextView
+    private var accelerometerValues by mutableStateOf(Triple(0f, 0f, 0f))
+    private var gyroscopeValues by mutableStateOf(Triple(0f, 0f, 0f))
+    private var linearAccelerationValues by mutableStateOf(Triple(0f, 0f, 0f))
+    private var magnetometerValues by mutableStateOf(Triple(0f, 0f, 0f))
+    private var proximityValue by mutableFloatStateOf(0f)
+    private var pressureValue by mutableFloatStateOf(0f)
+    private var lightValue by mutableFloatStateOf(0f)
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            startLocationUpdates()
+        } else {
+            Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        checkLocationPermission()
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-
         initializeSensors()
-        initializeSensorViews()
 
-        val sensorsList: List<Sensor> = sensorManager.getSensorList(Sensor.TYPE_ALL)
-        for (sensor in sensorsList) {
-            Log.d("SensorList", """
-                Name : ${sensor.name}
-                Max range : ${sensor.maximumRange}
-                Resolution : ${sensor.resolution}
-                Power consumption : ${sensor.power} mA
-            """.trimIndent())
+        setContent {
+            SensorDisplayScreen(
+                accelerometerValues = accelerometerValues,
+                gyroscopeValues = gyroscopeValues,
+                linearAccelerationValues = linearAccelerationValues,
+                magnetometerValues = magnetometerValues,
+                proximityValue = proximityValue,
+                pressureValue = pressureValue,
+                lightValue = lightValue,
+                gpsLocation = currentLocation
+            )
         }
     }
 
-
-    override fun onResume() {
-        super.onResume()
-
-        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
-        linearAcceleration?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
-        magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
-
-        proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        pressure?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // Disable sensors when app is not active
-        sensorManager.unregisterListener(this)
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null) return
-
-        when (event.sensor.type) {
-            Sensor.TYPE_ACCELEROMETER -> {
-                val (x, y, z) = event.values
-                accelerometerX.text = getString(R.string.accelerometer_x, x)
-                accelerometerY.text = getString(R.string.accelerometer_y, y)
-                accelerometerZ.text = getString(R.string.accelerometer_z, z)
-            }
-            Sensor.TYPE_GYROSCOPE -> {
-                val (x, y, z) = event.values
-                gyroscopeX.text = getString(R.string.gyroscope_x, x)
-                gyroscopeY.text = getString(R.string.gyroscope_y, y)
-                gyroscopeZ.text = getString(R.string.gyroscope_z, z)
-            }
-            Sensor.TYPE_LINEAR_ACCELERATION -> {
-                val (x, y, z) = event.values
-                linearAccelerationX.text = getString(R.string.linear_acceleration_x, x)
-                linearAccelerationY.text = getString(R.string.linear_acceleration_y, y)
-                linearAccelerationZ.text = getString(R.string.linear_acceleration_z, z)
-            }
-            Sensor.TYPE_MAGNETIC_FIELD -> {
-                val (x, y, z) = event.values
-                magnetometerX.text = getString(R.string.magnetometer_x, x)
-                magnetometerY.text = getString(R.string.magnetometer_y, y)
-                magnetometerZ.text = getString(R.string.magnetometer_z, z)
-            }
-            Sensor.TYPE_PROXIMITY -> {
-                val distance = event.values[0]
-                proximityView.text = getString(R.string.proximity_value, distance)
-            }
-            Sensor.TYPE_LIGHT -> {
-                val illuminance = event.values[0]
-                lightView.text = getString(R.string.light_value, illuminance)
-            }
-            Sensor.TYPE_PRESSURE -> {
-                val pressure = event.values[0]
-                pressureView.text = getString(R.string.pressure_value, pressure)
-            }
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            startLocationUpdates()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
-    }
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-        //
     }
-
 
     private fun initializeSensors() {
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -146,26 +104,126 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
     }
 
-    private fun initializeSensorViews() {
-        accelerometerX = findViewById(R.id.accelerometer_x)
-        accelerometerY = findViewById(R.id.accelerometer_y)
-        accelerometerZ = findViewById(R.id.accelerometer_z)
-
-        gyroscopeX = findViewById(R.id.gyroscope_x)
-        gyroscopeY = findViewById(R.id.gyroscope_y)
-        gyroscopeZ = findViewById(R.id.gyroscope_z)
-
-        linearAccelerationX = findViewById(R.id.linear_acceleration_x)
-        linearAccelerationY = findViewById(R.id.linear_acceleration_y)
-        linearAccelerationZ = findViewById(R.id.linear_acceleration_z)
-
-        magnetometerX = findViewById(R.id.magnetometer_x)
-        magnetometerY = findViewById(R.id.magnetometer_y)
-        magnetometerZ = findViewById(R.id.magnetometer_z)
-
-        proximityView = findViewById(R.id.proximity)
-        pressureView = findViewById(R.id.pressure)
-        lightView = findViewById(R.id.light)
+    override fun onResume() {
+        super.onResume()
+        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
+        linearAcceleration?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
+        magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
+        proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        pressure?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
     }
 
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        event?.let {
+            when (event.sensor.type) {
+                Sensor.TYPE_ACCELEROMETER -> {
+                    accelerometerValues = Triple(event.values[0], event.values[1], event.values[2])
+                }
+                Sensor.TYPE_GYROSCOPE -> {
+                    gyroscopeValues = Triple(event.values[0], event.values[1], event.values[2])
+                }
+                Sensor.TYPE_LINEAR_ACCELERATION -> {
+                    linearAccelerationValues = Triple(event.values[0], event.values[1], event.values[2])
+                }
+                Sensor.TYPE_MAGNETIC_FIELD -> {
+                    magnetometerValues = Triple(event.values[0], event.values[1], event.values[2])
+                }
+                Sensor.TYPE_PROXIMITY -> {
+                    proximityValue = if (event.values[0] == 0f) 0f else 1f
+                }
+                Sensor.TYPE_PRESSURE -> {
+                    pressureValue = event.values[0]
+                }
+                Sensor.TYPE_LIGHT -> {
+                    lightValue = event.values[0]
+                }
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        //
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates() {
+        fusedLocationClient.lastLocation.addOnSuccessListener(this, OnSuccessListener { location ->
+            currentLocation = location
+        })
+    }
+
+
+}
+
+@Composable
+fun SensorDisplayScreen(
+    accelerometerValues: Triple<Float, Float, Float>,
+    gyroscopeValues: Triple<Float, Float, Float>,
+    linearAccelerationValues: Triple<Float, Float, Float>,
+    magnetometerValues: Triple<Float, Float, Float>,
+    proximityValue: Float,
+    pressureValue: Float,
+    lightValue: Float,
+    gpsLocation: Location?
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        SensorDataSection(title = "Accelerometer (m/s^2)", values = accelerometerValues)
+        SensorDataSection(title = "Gyroscope (rad/s)", values = gyroscopeValues)
+        SensorDataSection(title = "Linear Acceleration (m/s^2)", values = linearAccelerationValues)
+        SensorDataSection(title = "Magnetometer (μT)", values = magnetometerValues)
+
+        SensorDataSingleValue(title = "Proximity", value = proximityValue)
+        SensorDataSingleValue(title = "Pressure (hPa)", value = pressureValue)
+        SensorDataSingleValue(title = "Light (lux)", value = lightValue)
+
+        SensorDataLocation(gpsLocation)
+    }
+}
+
+@Composable
+fun SensorDataSection(title: String, values: Triple<Float, Float, Float>) {
+    Column {
+        Text(text = title, fontSize = 18.sp, style = MaterialTheme.typography.titleSmall)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = "X: ${values.first}", fontSize = 16.sp)
+        Text(text = "Y: ${values.second}", fontSize = 16.sp)
+        Text(text = "Z: ${values.third}", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun SensorDataSingleValue(title: String, value: Float) {
+    Column {
+        Text(text = title, fontSize = 18.sp, style = MaterialTheme.typography.titleMedium)
+        Text(text = "value: $value", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun SensorDataLocation(gpsLocation: Location?) {
+    Column {
+        Text(text = "GPS Location", fontSize = 18.sp, style = MaterialTheme.typography.titleMedium)
+        Spacer(modifier = Modifier.height(4.dp))
+        gpsLocation?.let { location ->
+            Text("Latitude: ${location.latitude}", fontSize = 16.sp)
+            Text("Longitude: ${location.longitude}", fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }  ?: run {
+            Text("Récupération de la localisation...", fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
 }

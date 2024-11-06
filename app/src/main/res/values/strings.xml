@@ -29,5 +29,6 @@
     <string name="proximity_value">value: %1$.4f</string>
     <string name="light_value">value: %1$.4f lx</string>
     <string name="pressure_value">value: %1$.4f hPa</string>
+    <string name="title_activity_main">MainActivity</string>
 
 </resources>
