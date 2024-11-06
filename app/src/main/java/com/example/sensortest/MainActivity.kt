@@ -14,15 +14,19 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
+    // https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview#kotlin
+
     private lateinit var sensorManager: SensorManager
 
-    private var accelerometer: Sensor? = null
-    private var gyroscope: Sensor? = null
-    private var linearAcceleration: Sensor? = null
-    private var magnetometer: Sensor? = null
-    private var proximity: Sensor? = null
-    private var pressure: Sensor? = null
-    private var light: Sensor? = null
+    // TODO : create null "Sensor" variables (accelerometer, gyroscope ...)
+    private var accelerometer: ---
+    private var gyroscope: ---
+    private var linearAcceleration: ---
+    private var magnetometer: ---
+    private var proximity: ---
+    private var light: ---
+    private var pressure: ---
+
 
 
     private lateinit var accelerometerX: TextView
@@ -53,9 +57,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
+        // TODO : Initialize sensors. hold CTRL and click on the method
         initializeSensors()
+
+        //
         initializeSensorViews()
 
+        // Display all sensors in Log
         val sensorsList: List<Sensor> = sensorManager.getSensorList(Sensor.TYPE_ALL)
         for (sensor in sensorsList) {
             Log.d("SensorList", """
@@ -71,79 +79,84 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onResume() {
         super.onResume()
 
-        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
-        linearAcceleration?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
-        magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
+        // TODO : Register sensors to SensorManager when app is active
+        // try different sampling rate in last parameter
+        accelerometer?.let { sensorManager.registerListener(this, ---, ---) }
+        gyroscope?.let { sensorManager.registerListener(this, ---, ---) }
+        linearAcceleration?.let { sensorManager.registerListener(this, ---, ---) }
+        magnetometer?.let { sensorManager.registerListener(this, ---, ---) }
 
-        proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        pressure?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        proximity?.let { sensorManager.registerListener(this, ---, ---) }
+        light?.let { sensorManager.registerListener(this, ---, ---) }
+        pressure?.let { sensorManager.registerListener(this, ---, ---) }
 
     }
 
     override fun onPause() {
         super.onPause()
-        // Disable sensors when app is not active
-        sensorManager.unregisterListener(this)
+        // Unregister sensors when app is inactive
+        sensorManager.---(this)
     }
 
+    // systematically called when a sensor has changed value
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
 
         when (event.sensor.type) {
-            Sensor.TYPE_ACCELEROMETER -> {
-                val (x, y, z) = event.values
+            --- -> {
+                val (x, y, z) = // TODO
                 accelerometerX.text = getString(R.string.accelerometer_x, x)
                 accelerometerY.text = getString(R.string.accelerometer_y, y)
                 accelerometerZ.text = getString(R.string.accelerometer_z, z)
             }
-            Sensor.TYPE_GYROSCOPE -> {
-                val (x, y, z) = event.values
+            --- -> {
+                val (x, y, z) = // TODO
                 gyroscopeX.text = getString(R.string.gyroscope_x, x)
                 gyroscopeY.text = getString(R.string.gyroscope_y, y)
                 gyroscopeZ.text = getString(R.string.gyroscope_z, z)
             }
-            Sensor.TYPE_LINEAR_ACCELERATION -> {
-                val (x, y, z) = event.values
+            --- -> {
+                val (x, y, z) = // TODO
                 linearAccelerationX.text = getString(R.string.linear_acceleration_x, x)
                 linearAccelerationY.text = getString(R.string.linear_acceleration_y, y)
                 linearAccelerationZ.text = getString(R.string.linear_acceleration_z, z)
             }
-            Sensor.TYPE_MAGNETIC_FIELD -> {
-                val (x, y, z) = event.values
+            --- -> {
+                val (x, y, z) = // TODO
                 magnetometerX.text = getString(R.string.magnetometer_x, x)
                 magnetometerY.text = getString(R.string.magnetometer_y, y)
                 magnetometerZ.text = getString(R.string.magnetometer_z, z)
             }
-            Sensor.TYPE_PROXIMITY -> {
-                val distance = event.values[0]
+            --- -> {
+                val distance = // TODO
                 proximityView.text = getString(R.string.proximity_value, distance)
             }
-            Sensor.TYPE_LIGHT -> {
-                val illuminance = event.values[0]
+            --- -> {
+                val illuminance = // TODO
                 lightView.text = getString(R.string.light_value, illuminance)
             }
-            Sensor.TYPE_PRESSURE -> {
-                val pressure = event.values[0]
+            --- -> {
+                val pressure = // TODO
                 pressureView.text = getString(R.string.pressure_value, pressure)
             }
         }
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-        //
+        // Nothing to do here
+        // https://developer.android.com/reference/android/hardware/SensorListener#onAccuracyChanged(int,%20int)
     }
 
 
     private fun initializeSensors() {
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-        linearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-        proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY)
-        light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
-        pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
+        // TODO: get default sensors, and save them in this class
+        accelerometer = sensorManager.
+        gyroscope = sensorManager.
+        linearAcceleration = sensorManager.
+        magnetometer = sensorManager.
+        proximity = sensorManager.
+        light = sensorManager.
+        pressure = sensorManager.
     }
 
     private fun initializeSensorViews() {
