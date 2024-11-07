@@ -83,15 +83,21 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            startLocationUpdates()
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            ) -> {
+                startLocationUpdates()
+            }
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) -> {
+                startLocationUpdates()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
         }
-
     }
 
     private fun initializeSensors() {
@@ -113,6 +119,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         pressure?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        startLocationUpdates()
     }
 
     override fun onPause() {
@@ -220,9 +227,10 @@ fun SensorDataLocation(gpsLocation: Location?) {
         gpsLocation?.let { location ->
             Text("Latitude: ${location.latitude}", fontSize = 16.sp)
             Text("Longitude: ${location.longitude}", fontSize = 16.sp)
+            Text("Accuracy: ${location.accuracy}", fontSize = 16.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }  ?: run {
-            Text("Récupération de la localisation...", fontSize = 16.sp)
+            Text("Permission denied, or waiting for location", fontSize = 16.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
