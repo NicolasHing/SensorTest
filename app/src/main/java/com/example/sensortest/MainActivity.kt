@@ -29,13 +29,15 @@ import android.content.pm.PackageManager
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
-    private var accelerometer: Sensor? = null
-    private var gyroscope: Sensor? = null
-    private var linearAcceleration: Sensor? = null
-    private var magnetometer: Sensor? = null
-    private var proximity: Sensor? = null
-    private var pressure: Sensor? = null
-    private var light: Sensor? = null
+
+    // TODO : create null "Sensor" variables (accelerometer, gyroscope ...)
+    private var accelerometer: ---
+    private var gyroscope: ---
+    private var linearAcceleration: ---
+    private var magnetometer: ---
+    private var proximity: ---
+    private var pressure: ---
+    private var light: ---
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
@@ -66,6 +68,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         checkLocationPermission()
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        // TODO : Initialize sensors. hold CTRL and click on the method
         initializeSensors()
 
         setContent {
@@ -83,66 +87,78 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            startLocationUpdates()
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            ) -> {
+                startLocationUpdates()
+            }
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) -> {
+                startLocationUpdates()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
         }
-
     }
 
     private fun initializeSensors() {
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-        linearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-        proximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY)
-        light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
-        pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
+        // TODO: get default sensors, and save them in this class
+        accelerometer = sensorManager.---
+        gyroscope = sensorManager.---
+        linearAcceleration = sensorManager.---
+        magnetometer = sensorManager.---
+        proximity = sensorManager.---
+        light = sensorManager.---
+        pressure = sensorManager.---
     }
 
     override fun onResume() {
         super.onResume()
-        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
-        linearAcceleration?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
-        magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
-        proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        pressure?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        // TODO : Register sensors to SensorManager when app is active
+        // try different sampling rate in last parameter
+        accelerometer?.let { sensorManager.registerListener(this, ---, ---) }
+        gyroscope?.let { sensorManager.registerListener(this, ---, ---) }
+        linearAcceleration?.let { sensorManager.registerListener(this, ---, ---) }
+        magnetometer?.let { sensorManager.registerListener(this, ---, ---) }
+        proximity?.let { sensorManager.registerListener(this, ---, ---) }
+        light?.let { sensorManager.registerListener(this, ---, ---) }
+        pressure?.let { sensorManager.registerListener(this, ---, ---) }
+        startLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        sensorManager.unregisterListener(this)
+        // Unregister sensors when app is inactive
+        sensorManager.---(this)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
+    // TODO
         event?.let {
             when (event.sensor.type) {
-                Sensor.TYPE_ACCELEROMETER -> {
-                    accelerometerValues = Triple(event.values[0], event.values[1], event.values[2])
+                --- -> {
+                    accelerometerValues = Triple(---, ---, ---)
                 }
-                Sensor.TYPE_GYROSCOPE -> {
-                    gyroscopeValues = Triple(event.values[0], event.values[1], event.values[2])
+                --- -> {
+                    gyroscopeValues = Triple(---, ---, ---)
                 }
-                Sensor.TYPE_LINEAR_ACCELERATION -> {
-                    linearAccelerationValues = Triple(event.values[0], event.values[1], event.values[2])
+                --- -> {
+                    linearAccelerationValues = Triple(---, ---, ---)
                 }
-                Sensor.TYPE_MAGNETIC_FIELD -> {
-                    magnetometerValues = Triple(event.values[0], event.values[1], event.values[2])
+                --- -> {
+                    magnetometerValues = Triple(---, ---, ---)
                 }
-                Sensor.TYPE_PROXIMITY -> {
+                --- -> {
                     proximityValue = if (event.values[0] == 0f) 0f else 1f
                 }
-                Sensor.TYPE_PRESSURE -> {
-                    pressureValue = event.values[0]
+                --- -> {
+                    pressureValue = ---
                 }
-                Sensor.TYPE_LIGHT -> {
-                    lightValue = event.values[0]
+                --- -> {
+                    lightValue = ---
                 }
             }
         }
@@ -220,9 +236,10 @@ fun SensorDataLocation(gpsLocation: Location?) {
         gpsLocation?.let { location ->
             Text("Latitude: ${location.latitude}", fontSize = 16.sp)
             Text("Longitude: ${location.longitude}", fontSize = 16.sp)
+            Text("Accuracy: ${location.accuracy}", fontSize = 16.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }  ?: run {
-            Text("Récupération de la localisation...", fontSize = 16.sp)
+            Text("Permission denied, or waiting for location", fontSize = 16.sp)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
