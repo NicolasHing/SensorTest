@@ -22,9 +22,13 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.OnSuccessListener
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Looper
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -39,6 +43,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
 
     private var accelerometerValues by mutableStateOf(Triple(0f, 0f, 0f))
     private var gyroscopeValues by mutableStateOf(Triple(0f, 0f, 0f))
@@ -95,7 +101,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 startLocationUpdates()
             }
             else -> {
-                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
@@ -110,6 +116,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
     }
 
+    // Register listeners at startup and on resume
     override fun onResume() {
         super.onResume()
         accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
@@ -122,9 +129,11 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         startLocationUpdates()
     }
 
+    // Unregister listeners on pause
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -143,7 +152,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     magnetometerValues = Triple(event.values[0], event.values[1], event.values[2])
                 }
                 Sensor.TYPE_PROXIMITY -> {
-                    proximityValue = if (event.values[0] == 0f) 0f else 1f
+                    proximityValue = if (event.values[0] == 0f) 1f else 0f
                 }
                 Sensor.TYPE_PRESSURE -> {
                     pressureValue = event.values[0]
@@ -161,11 +170,25 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-        fusedLocationClient.lastLocation.addOnSuccessListener(this, OnSuccessListener { location ->
-            currentLocation = location
-        })
+        // Create a location request
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+            .setIntervalMillis(1000)
+            .build()
+        // Create a location callback
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult.lastLocation?.let { location ->
+                    currentLocation = location
+                }
+            }
+        }
+        // Request location updates
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper() // Use the main looper to update the UI
+        )
     }
-
 
 }
 
