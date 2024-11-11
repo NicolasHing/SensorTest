@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
-    private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
 
     private var accelerometerValues by mutableStateOf(Triple(0f, 0f, 0f))
@@ -182,7 +181,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private fun startLocationUpdates() {
         // TODO
         // Create a location request
-        locationRequest = LocationRequest.Builder(---, ---)
+        val locationRequest:LocationRequest = LocationRequest.Builder(---, ---)
 
         // Create a location callback
         locationCallback = object : LocationCallback() {
