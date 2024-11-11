@@ -172,7 +172,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private fun startLocationUpdates() {
         // Create a location request
         locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
-            .setIntervalMillis(1000)
             .build()
         // Create a location callback
         locationCallback = object : LocationCallback() {
