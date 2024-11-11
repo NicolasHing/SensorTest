@@ -140,7 +140,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
         // Unregister sensors when app is inactive
+        // TODO : Unregister sensors
         sensorManager.---(this)
+        fusedLocationClient.---(locationCallback)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -178,15 +180,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
+        // TODO
         // Create a location request
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
-            .setIntervalMillis(1000)
-            .build()
+        locationRequest = LocationRequest.Builder(---, ---)
+
         // Create a location callback
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
-                    currentLocation = location
+                    currentLocation = ---
                 }
             }
         }
