@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Location? = null
-    private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
 
     private var accelerometerValues by mutableStateOf(Triple(0f, 0f, 0f))
@@ -171,7 +170,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         // Create a location request
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+        val locationRequest: LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
             .build()
         // Create a location callback
         locationCallback = object : LocationCallback() {
